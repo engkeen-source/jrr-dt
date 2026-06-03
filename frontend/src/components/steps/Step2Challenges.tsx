@@ -15,10 +15,22 @@ function serialize(selected: string[], other: string): string {
   return parts.join("; ");
 }
 
+function parsePersistedValue(raw: string, options: string[]): { selected: string[]; other: string } {
+  if (!raw) return { selected: [], other: "" };
+  const parts = raw.split("; ");
+  const selected = parts.filter((p) => options.includes(p));
+  const other = parts.filter((p) => !options.includes(p)).join("; ");
+  return { selected, other };
+}
+
 export default function Step2Challenges({ form }: Props) {
   const { setValue, formState: { errors } } = form;
-  const [selected, setSelected] = useState<string[]>([]);
-  const [other, setOther] = useState("");
+  const [selected, setSelected] = useState<string[]>(() =>
+    parsePersistedValue(form.getValues("currentChallenges"), CHALLENGE_OPTIONS).selected
+  );
+  const [other, setOther] = useState<string>(() =>
+    parsePersistedValue(form.getValues("currentChallenges"), CHALLENGE_OPTIONS).other
+  );
 
   const toggle = (opt: string) => {
     const next = selected.includes(opt)

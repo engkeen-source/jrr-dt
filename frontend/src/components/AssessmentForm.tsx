@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -10,27 +10,66 @@ import Step2Challenges from "./steps/Step2Challenges";
 import Step3Vision from "./steps/Step3Vision";
 import Step4Workforce from "./steps/Step4Workforce";
 
+const STORAGE_KEY = "jrr-assessment-form";
+
+const DEFAULT_VALUES: AssessmentFormData = {
+  companyName: "",
+  companyWebsite: "",
+  industry: "",
+  contactName: "",
+  contactEmail: "",
+  currentChallenges: "",
+  envisionedState: "",
+  roadblocks: "",
+  staffStrength: "",
+  pmetCount: "0",
+};
+
 export default function AssessmentForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   const form = useForm<AssessmentFormData>({
     resolver: zodResolver(assessmentSchema),
     mode: "onTouched",
-    defaultValues: {
-      companyName: "",
-      companyWebsite: "",
-      industry: "",
-      contactName: "",
-      contactEmail: "",
-      currentChallenges: "",
-      envisionedState: "",
-      roadblocks: "",
-      staffStrength: "",
-      pmetCount: "0",
-    },
+    defaultValues: DEFAULT_VALUES,
   });
+
+  // Load persisted data on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as AssessmentFormData;
+        form.reset(parsed);
+        setFormKey((k) => k + 1); // remount Step2/Step3 so chips rehydrate
+      }
+    } catch {
+      // corrupted storage — ignore
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist on every change
+  useEffect(() => {
+    const sub = form.watch((values) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+      } catch {
+        // storage full or unavailable — ignore
+      }
+    });
+    return () => sub.unsubscribe();
+  }, [form]);
+
+  const handleReset = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    form.reset(DEFAULT_VALUES);
+    setSubmitError(null);
+    setFormKey((k) => k + 1); // remount Step2/Step3 to clear chips
+  };
 
   const onSubmit = async (data: AssessmentFormData) => {
     setIsSubmitting(true);
@@ -54,6 +93,9 @@ export default function AssessmentForm() {
       if (!res.ok || !json.success) {
         throw new Error(json.error || "Something went wrong. Please try again.");
       }
+
+      // Clear saved data after successful submission
+      localStorage.removeItem(STORAGE_KEY);
 
       router.push(
         `/success?name=${encodeURIComponent(data.contactName)}&company=${encodeURIComponent(data.companyName)}&email=${encodeURIComponent(data.contactEmail)}`
@@ -90,7 +132,7 @@ export default function AssessmentForm() {
             <p className="text-[#80367B] text-xs mt-1">Help us understand what you&apos;re facing today</p>
           </div>
           <div className="p-8">
-            <Step2Challenges form={form} />
+            <Step2Challenges key={`step2-${formKey}`} form={form} />
           </div>
         </div>
 
@@ -103,7 +145,7 @@ export default function AssessmentForm() {
             <p className="text-[#80367B] text-xs mt-1">Where you want to go, and what might get in the way</p>
           </div>
           <div className="p-8">
-            <Step3Vision form={form} />
+            <Step3Vision key={`step3-${formKey}`} form={form} />
           </div>
         </div>
 
@@ -126,7 +168,18 @@ export default function AssessmentForm() {
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="flex items-center gap-2 bg-white border border-[#E3E2EC] hover:border-red-300 hover:text-red-600 text-[#6E7881] font-medium px-6 py-4 rounded-[10px] text-sm transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Reset Form
+          </button>
+
           <button
             type="submit"
             disabled={isSubmitting}
