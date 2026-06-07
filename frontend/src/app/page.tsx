@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Footer from "@/components/Footer";
 
 const features = [
   {
@@ -63,13 +64,14 @@ const pillars = [
 
 export default function LandingPage() {
   return (
+    <>
     <main className="grid-bg min-h-screen bg-white">
       {/* Header */}
       <header className="border-b border-[#E3E2EC] sticky top-0 z-50 bg-white/95 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/waf-logo.png" alt="Workforce Alliance Foundation" className="h-9 w-auto" />
+            <img src="/waf-logo.png" alt="Workforce Advancement Federation" className="h-9 w-auto" />
           </div>
           <div className="text-xs text-[#6E7881] hidden sm:block">
             waf.org.sg
@@ -198,16 +200,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-[#E3E2EC]">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-xs text-[#B7AFAF]">
-            © {new Date().getFullYear()} Workforce Alliance Foundation · waf.org.sg
-          </div>
-          <div className="text-xs text-[#B7AFAF]">
-            Report generated using AI — for advisory use only
-          </div>
-        </div>
-      </footer>
     </main>
+    <Footer />
+    </>
   );
 }

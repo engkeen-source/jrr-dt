@@ -47,8 +47,8 @@ export default function Step1Company({ form }: Props) {
         </div>
       </FormField>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <FormField label="Contact Person Name" required error={errors.contactName}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 sm:[grid-template-rows:auto_auto_auto]">
+        <FormField label="Contact Person Name" required error={errors.contactName} syncRows>
           <input
             {...register("contactName")}
             placeholder="e.g. John Tan"
@@ -61,6 +61,7 @@ export default function Step1Company({ form }: Props) {
           required
           hint="Your PDF report will be sent here"
           error={errors.contactEmail}
+          syncRows
         >
           <input
             {...register("contactEmail")}

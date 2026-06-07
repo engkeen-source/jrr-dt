@@ -15,14 +15,22 @@ app.get("/api/health", (_req, res) => {
     timestamp: new Date().toISOString(),
     geminiKey: !!process.env.GEMINI_API_KEY,
     resendKey: !!process.env.RESEND_API_KEY,
+    supabase: !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY,
   });
 });
 
 app.use("/api/assessment", assessmentRouter);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`\n🚀 SME AI Assessment backend running on http://localhost:${PORT}`);
   console.log(`   Health check: http://localhost:${PORT}/api/health`);
   console.log(`   POST /api/assessment — generate report`);
   console.log(`   GET  /api/assessment/:id/download — download PDF\n`);
 });
+
+// Graceful shutdown — lets nodemon restart cleanly without EADDRINUSE
+function shutdown() {
+  server.close(() => process.exit(0));
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

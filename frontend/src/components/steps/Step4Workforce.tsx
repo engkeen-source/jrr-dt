@@ -13,12 +13,13 @@ export default function Step4Workforce({ form }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 sm:[grid-template-rows:auto_auto_auto]">
         <FormField
           label="Staff Strength"
           hint="Total number of employees in your company"
           required
           error={errors.staffStrength}
+          syncRows
         >
           <input
             {...register("staffStrength")}
@@ -34,6 +35,7 @@ export default function Step4Workforce({ form }: Props) {
           hint="PMET = Professionals, Managers, Executives, Technicians (Singapore Citizens & PRs only)"
           required
           error={errors.pmetCount}
+          syncRows
         >
           <input
             {...register("pmetCount")}

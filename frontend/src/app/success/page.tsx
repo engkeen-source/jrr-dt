@@ -1,7 +1,8 @@
 import Link from "next/link";
+import ReportStatusPoller from "@/components/ReportStatusPoller";
 
 interface Props {
-  searchParams: Promise<{ name?: string; company?: string; email?: string }>;
+  searchParams: Promise<{ name?: string; company?: string; email?: string; reportId?: string }>;
 }
 
 export default async function SuccessPage({ searchParams }: Props) {
@@ -9,6 +10,7 @@ export default async function SuccessPage({ searchParams }: Props) {
   const name = params.name || "there";
   const company = params.company || "your company";
   const email = params.email || "your email";
+  const reportId = params.reportId || "";
 
   return (
     <main className="grid-bg min-h-screen flex flex-col bg-white">
@@ -16,29 +18,38 @@ export default async function SuccessPage({ searchParams }: Props) {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center">
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/waf-logo.png" alt="Workforce Alliance Foundation" className="h-9 w-auto" />
+            <img src="/waf-logo.png" alt="Workforce Advancement Federation" className="h-9 w-auto" />
           </Link>
         </div>
       </header>
 
       <div className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="max-w-lg w-full text-center">
-          <div
-            className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl"
-            style={{ background: "linear-gradient(135deg, #80367B, #FF6D2E)" }}
-          >
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <div className="relative w-20 h-20 mx-auto mb-8">
+            <div
+              className="absolute inset-0 rounded-full shadow-xl"
+              style={{ background: "linear-gradient(135deg, #80367B22, #FF6D2E22)", border: "2px solid #D4B8D2" }}
+            />
+            <div
+              className="absolute inset-[6px] rounded-2xl flex items-center justify-center shadow-md"
+              style={{ background: "linear-gradient(135deg, #80367B, #FF6D2E)" }}
+            >
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
           </div>
 
           <h1 className="text-3xl font-black text-[#212529] mb-3" style={{ fontFamily: "Lexend, sans-serif" }}>
-            Your Report is Ready!
+            Your Report is on Its Way!
           </h1>
+          <p className="text-[#6E7881] text-base leading-relaxed mb-3">
+            Hi <strong className="text-[#212529]">{name}</strong> — we&apos;re generating your personalised AI Readiness Assessment for{" "}
+            <strong className="text-[#212529]">{company}</strong> right now.
+          </p>
           <p className="text-[#6E7881] text-base leading-relaxed mb-8">
-            Hi <strong className="text-[#212529]">{name}</strong> — your personalised AI Readiness Assessment for{" "}
-            <strong className="text-[#212529]">{company}</strong> has been generated and sent to{" "}
-            <strong className="text-[#80367B]">{email}</strong>.
+            It will be emailed to <strong className="text-[#80367B]">{email}</strong> within the next 1–2 minutes.{" "}
+            <strong className="text-[#212529]">You can close this tab</strong> — we&apos;ll deliver it straight to your inbox.
           </p>
 
           <div className="bg-[#F5F5F5] border border-[#E3E2EC] rounded-2xl p-6 text-left mb-8">
@@ -71,12 +82,15 @@ export default async function SuccessPage({ searchParams }: Props) {
             </ul>
           </div>
 
-          <div className="bg-[#F3E9F3] border border-[#D4B8D2] rounded-xl p-4 mb-8">
-            <p className="text-xs text-[#4C215D] leading-relaxed">
-              <strong>Don&apos;t see the email?</strong> Check your spam or junk folder.
-              The email is sent from <em>onboarding@resend.dev</em> or your configured sending address.
-            </p>
-          </div>
+          {reportId ? (
+            <ReportStatusPoller reportId={reportId} email={email} />
+          ) : (
+            <div className="bg-[#F3E9F3] border border-[#D4B8D2] rounded-xl p-4 mb-8">
+              <p className="text-xs text-[#4C215D] leading-relaxed">
+                <strong>Not in your inbox after 2 minutes?</strong> Check your spam or junk folder.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link

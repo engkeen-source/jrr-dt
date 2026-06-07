@@ -25,11 +25,21 @@ const DEFAULT_VALUES: AssessmentFormData = {
   pmetCount: "0",
 };
 
+const LOADING_STEPS = [
+  "Analysing business climate trends…",
+  "Mapping disruption risks…",
+  "Calculating workforce impact…",
+  "Compiling Singapore grant opportunities…",
+  "Projecting 3-year ROI…",
+  "Designing your PDF report…",
+];
+
 export default function AssessmentForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [formKey, setFormKey] = useState(0);
+  const [activeStep, setActiveStep] = useState(-1);
 
   const form = useForm<AssessmentFormData>({
     resolver: zodResolver(assessmentSchema),
@@ -64,6 +74,19 @@ export default function AssessmentForm() {
     return () => sub.unsubscribe();
   }, [form]);
 
+  // Cycle loading steps for visual feedback
+  useEffect(() => {
+    if (!isSubmitting) { setActiveStep(-1); return; }
+    setActiveStep(0);
+    let current = 0;
+    const id = setInterval(() => {
+      current += 1;
+      if (current >= LOADING_STEPS.length) { clearInterval(id); return; }
+      setActiveStep(current);
+    }, 700);
+    return () => clearInterval(id);
+  }, [isSubmitting]);
+
   const handleReset = () => {
     localStorage.removeItem(STORAGE_KEY);
     form.reset(DEFAULT_VALUES);
@@ -91,14 +114,21 @@ export default function AssessmentForm() {
       const json = await res.json();
 
       if (!res.ok || !json.success) {
+        // 409 = duplicate already in progress — send to status page
+        if (res.status === 409 && json.existingReportId) {
+          router.push(
+            `/success?name=${encodeURIComponent(data.contactName)}&company=${encodeURIComponent(data.companyName)}&email=${encodeURIComponent(data.contactEmail)}&reportId=${json.existingReportId}`
+          );
+          return;
+        }
         throw new Error(json.error || "Something went wrong. Please try again.");
       }
 
-      // Clear saved data after successful submission
-      localStorage.removeItem(STORAGE_KEY);
+      // Do NOT clear localStorage here — the AI is still running in the background.
+      // The success page polls /status and clears localStorage only on "sent".
 
       router.push(
-        `/success?name=${encodeURIComponent(data.contactName)}&company=${encodeURIComponent(data.companyName)}&email=${encodeURIComponent(data.contactEmail)}`
+        `/success?name=${encodeURIComponent(data.contactName)}&company=${encodeURIComponent(data.companyName)}&email=${encodeURIComponent(data.contactEmail)}&reportId=${encodeURIComponent(json.reportId)}`
       );
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "An unexpected error occurred.");
@@ -207,40 +237,71 @@ export default function AssessmentForm() {
 
       {/* Generating overlay */}
       {isSubmitting && (
-        <div className="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-          <div className="text-center max-w-sm px-6">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse"
-              style={{ background: "linear-gradient(135deg, #80367B, #FF6D2E)" }}
-            >
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+        <div className="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center px-6">
+          <div className="text-center w-full max-w-sm">
+
+            {/* Spinning ring + icon */}
+            <div className="relative w-20 h-20 mx-auto mb-6">
+              <div
+                className="absolute inset-0 rounded-full border-4 border-[#E3E2EC] animate-orbit"
+                style={{ borderTopColor: "#80367B", borderRightColor: "#FF6D2E" }}
+              />
+              <div
+                className="absolute inset-[6px] rounded-2xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #80367B, #FF6D2E)" }}
+              >
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
             </div>
-            <h3 className="text-[#212529] font-bold text-xl mb-3" style={{ fontFamily: "Lexend, sans-serif" }}>
+
+            <h3 className="text-[#212529] font-bold text-xl mb-2" style={{ fontFamily: "Lexend, sans-serif" }}>
               Generating Your Report
             </h3>
             <p className="text-[#6E7881] text-sm leading-relaxed mb-6">
-              Our AI is analysing your business profile and crafting a personalised consultant-level assessment. This takes about 30–60 seconds.
+              Our AI is analysing your business profile and crafting a personalised consultant-level assessment.
             </p>
-            <div className="space-y-2 text-left">
-              {[
-                "Analysing business climate trends…",
-                "Mapping disruption risks…",
-                "Calculating workforce impact…",
-                "Compiling Singapore grant opportunities…",
-                "Projecting 3-year ROI…",
-                "Designing your PDF report…",
-              ].map((step, i) => (
-                <div key={i} className="flex items-center gap-3 text-xs text-[#6E7881]">
+
+            {/* Animated steps */}
+            <div className="space-y-2.5 text-left mb-6">
+              {LOADING_STEPS.map((step, i) => {
+                const done = activeStep > i;
+                const active = activeStep === i;
+                return (
                   <div
-                    className="w-1.5 h-1.5 rounded-full animate-pulse"
-                    style={{ backgroundColor: "#80367B", animationDelay: `${i * 0.3}s` }}
-                  />
-                  {step}
-                </div>
-              ))}
+                    key={i}
+                    className={`flex items-center gap-3 text-xs transition-colors duration-400 animate-fade-slide-in`}
+                    style={{ animationDelay: `${i * 0.12}s`, color: done || active ? "#212529" : "#B7AFAF" }}
+                  >
+                    <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+                      {done ? (
+                        <svg className="w-4 h-4 animate-step-tick" style={{ color: "#80367B" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <span
+                          className={`w-2 h-2 rounded-full ${active ? "animate-pulse" : ""}`}
+                          style={{ backgroundColor: active ? "#80367B" : "#E3E2EC" }}
+                        />
+                      )}
+                    </span>
+                    <span className={done ? "opacity-40" : ""}>{step}</span>
+                  </div>
+                );
+              })}
             </div>
+
+            {/* Close-tab notice */}
+            <div className="bg-[#F3E9F3] border border-[#D4B8D2] rounded-xl p-3.5 flex items-start gap-2.5 text-left">
+              <svg className="w-4 h-4 text-[#80367B] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <p className="text-xs text-[#4C215D] leading-relaxed">
+                <strong>You can safely close this tab.</strong> Your report is being generated in the background — we&apos;ll email it to you when it&apos;s ready.
+              </p>
+            </div>
+
           </div>
         </div>
       )}

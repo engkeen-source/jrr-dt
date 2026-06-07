@@ -11,6 +11,8 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - OUTPUT_DIR=/app/outputs
       - PORT=3001
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
     volumes:
       - pdf_outputs:/app/outputs
 
