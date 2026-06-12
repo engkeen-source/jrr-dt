@@ -118,7 +118,7 @@ export default function ReportStatusPoller({ reportId, email }: Props) {
       </svg>
       <p className="text-xs text-[#4C215D]">
         {status === "generated" ? "PDF ready — sending email…" : "AI is generating your report…"}
-        {" "}This usually takes 1–2 minutes.
+        {" "}This can take up to 30 minutes.
       </p>
     </div>
   );

@@ -48,7 +48,7 @@ export default async function SuccessPage({ searchParams }: Props) {
             <strong className="text-[#212529]">{company}</strong> right now.
           </p>
           <p className="text-[#6E7881] text-base leading-relaxed mb-8">
-            It will be emailed to <strong className="text-[#80367B]">{email}</strong> within the next 1–2 minutes.{" "}
+            It will be emailed to <strong className="text-[#80367B]">{email}</strong> within the next 30 minutes.{" "}
             <strong className="text-[#212529]">You can close this tab</strong> — we&apos;ll deliver it straight to your inbox.
           </p>
 
@@ -87,7 +87,7 @@ export default async function SuccessPage({ searchParams }: Props) {
           ) : (
             <div className="bg-[#F3E9F3] border border-[#D4B8D2] rounded-xl p-4 mb-8">
               <p className="text-xs text-[#4C215D] leading-relaxed">
-                <strong>Not in your inbox after 2 minutes?</strong> Check your spam or junk folder.
+                <strong>Not in your inbox after 30 minutes?</strong> Check your spam or junk folder.
               </p>
             </div>
           )}

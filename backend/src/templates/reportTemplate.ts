@@ -1020,7 +1020,7 @@ export function buildReportSegments(
 
   <div class="cover-bottom">
     <div class="cover-bottom-left">
-      <div class="cover-org">Workforce Alliance Foundation</div>
+      <div class="cover-org">Workforce Advancement Federation</div>
       <div class="cover-website">waf.org.sg</div>
     </div>
     <div class="cover-bottom-right">
@@ -1512,7 +1512,7 @@ export function buildReportSegments(
         .replace(/<\/p>/g, '</p>')}
     </div>
     <div style="margin-top: 20px; font-size: 9pt; opacity: 0.8; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 14px;">
-      Powered by Workforce Alliance Foundation · waf.org.sg
+      Powered by Workforce Advancement Federation · waf.org.sg
     </div>
   </div>
 </div>`;

@@ -13,6 +13,7 @@ app.get("/api/health", (_req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
+    deepseekKey: !!process.env.DEEPSEEK_API_KEY,
     geminiKey: !!process.env.GEMINI_API_KEY,
     resendKey: !!process.env.RESEND_API_KEY,
     supabase: !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY,
